@@ -221,6 +221,39 @@ export default function App() {
     setIsFormOpen(true);
   };
 
+  const handleAddMissingFormat = (name: string, state: string, role: PlayerRole, format: GameFormat) => {
+    setEditingPlayer({
+      id: `player-${Date.now()}`,
+      name,
+      state,
+      role,
+      format,
+      matches: 0,
+      battingInnings: 0,
+      notOuts: 0,
+      battingRuns: 0,
+      highestScore: 0,
+      highestScoreNotOut: false,
+      ballsFaced: 0,
+      battingStrikeRate: 0,
+      hundreds: 0,
+      fiftyPlus: 0,
+      fours: 0,
+      sixes: 0,
+      bowlingInnings: 0,
+      ballsBowled: 0,
+      runsConceded: 0,
+      wickets: 0,
+      bestBowlingWickets: 0,
+      bestBowlingRuns: 0,
+      bowlingEconomy: 0,
+      bowlingStrikeRate: 0,
+      catches: 0,
+      stumpings: 0,
+    });
+    setIsFormOpen(true);
+  };
+
   const handleResetToPreloaded = () => {
     setConfirmDialog({
       title: "Restore Factory Roster",
@@ -511,38 +544,7 @@ export default function App() {
               onReset={handleResetToPreloaded}
               onExportPdf={handleExportPdfReport}
               onImportClick={() => setIsImportOpen(true)}
-              onAddMissingFormat={(name, state, role, format) => {
-                setEditingPlayer({
-                  id: `player-${Date.now()}`,
-                  name,
-                  state,
-                  role,
-                  format,
-                  matches: 0,
-                  battingInnings: 0,
-                  notOuts: 0,
-                  battingRuns: 0,
-                  highestScore: 0,
-                  highestScoreNotOut: false,
-                  ballsFaced: 0,
-                  battingStrikeRate: 0,
-                  hundreds: 0,
-                  fiftyPlus: 0,
-                  fours: 0,
-                  sixes: 0,
-                  bowlingInnings: 0,
-                  ballsBowled: 0,
-                  runsConceded: 0,
-                  wickets: 0,
-                  bestBowlingWickets: 0,
-                  bestBowlingRuns: 0,
-                  bowlingEconomy: 0,
-                  bowlingStrikeRate: 0,
-                  catches: 0,
-                  stumpings: 0,
-                });
-                setIsFormOpen(true);
-              }}
+              onAddMissingFormat={handleAddMissingFormat}
             />
           )}
 
@@ -551,7 +553,7 @@ export default function App() {
           )}
 
           {activeLayoutTab === "duel" && (
-            <PlayerCompare players={players} />
+            <PlayerCompare players={players} onAddMissingFormat={handleAddMissingFormat} />
           )}
         </div>
 

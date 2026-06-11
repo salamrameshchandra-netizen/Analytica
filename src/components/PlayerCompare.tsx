@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { PlayerStats } from "../types";
+import { useState, useMemo, useEffect } from "react";
+import { PlayerStats, GameFormat, PlayerRole } from "../types";
 import { getDefaultAvatarEmoji, getDefaultAvatarColor, getAvatarColorClasses } from "./StatsForm";
 import {
   calculateBattingAverage,
@@ -54,24 +54,68 @@ const tooltipDictionary: Record<string, { desc: string; formula?: string }> = {
 
 interface PlayerCompareProps {
   players: PlayerStats[];
+  onAddMissingFormat?: (name: string, state: string, role: PlayerRole, format: GameFormat) => void;
 }
 
-export default function PlayerCompare({ players }: PlayerCompareProps) {
-  const [playerAId, setPlayerAId] = useState<string>("");
-  const [playerBId, setPlayerBId] = useState<string>("");
+export default function PlayerCompare({ players, onAddMissingFormat }: PlayerCompareProps) {
+  const uniquePlayers = useMemo(() => {
+    const list: { name: string; state: string; role: PlayerRole }[] = [];
+    const seen = new Set<string>();
+    players.forEach((p) => {
+      const key = p.name.trim().toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        list.push({ name: p.name, state: p.state, role: p.role });
+      }
+    });
+    return list;
+  }, [players]);
+
+  const [nameA, setNameA] = useState<string>("");
+  const [formatA, setFormatA] = useState<GameFormat>(GameFormat.FC);
+  const [nameB, setNameB] = useState<string>("");
+  const [formatB, setFormatB] = useState<GameFormat>(GameFormat.T20);
 
   // Set default side-by-side comparisons
   useState(() => {
-    if (players.length >= 2) {
-      setPlayerAId(players[0].id);
-      setPlayerBId(players[1].id);
+    if (players.length > 0) {
+      setNameA(players[0].name);
+      setFormatA(players[0].format);
+    }
+    if (players.length > 1) {
+      setNameB(players[1].name);
+      setFormatB(players[1].format);
     } else if (players.length > 0) {
-      setPlayerAId(players[0].id);
+      setNameB(players[0].name);
+      setFormatB(GameFormat.T20);
     }
   });
 
-  const playerA = useMemo(() => players.find((p) => p.id === playerAId) || null, [players, playerAId]);
-  const playerB = useMemo(() => players.find((p) => p.id === playerBId) || null, [players, playerBId]);
+  const uniqueNames = useMemo(() => uniquePlayers.map((u) => u.name), [uniquePlayers]);
+
+  useEffect(() => {
+    if (uniqueNames.length > 0) {
+      if (!uniqueNames.includes(nameA)) {
+        setNameA(uniqueNames[0]);
+        const matched = players.find((p) => p.name === uniqueNames[0]);
+        if (matched) setFormatA(matched.format);
+      }
+      if (!uniqueNames.includes(nameB)) {
+        const defaultB = uniqueNames[1] || uniqueNames[0];
+        setNameB(defaultB);
+        const matched = players.find((p) => p.name === defaultB);
+        if (matched) setFormatB(matched.format);
+      }
+    }
+  }, [players, uniqueNames, nameA, nameB]);
+
+  const playerA = useMemo(() => {
+    return players.find((p) => p.name === nameA && p.format === formatA) || null;
+  }, [players, nameA, formatA]);
+
+  const playerB = useMemo(() => {
+    return players.find((p) => p.name === nameB && p.format === formatB) || null;
+  }, [players, nameB, formatB]);
 
   // Derived stats
   const statsA = useMemo(() => {
@@ -99,6 +143,10 @@ export default function PlayerCompare({ players }: PlayerCompareProps) {
   // Compare row metrics: helper to check who is higher/better
   // betterHigher: true if more is better (runs, average, wickets), false if less is better (economy, bowling strike rate)
   const getWinner = (valA: number, valB: number, betterHigher = true) => {
+    if (!playerA && !playerB) return "tie";
+    if (!playerA) return "B";
+    if (!playerB) return "A";
+
     if (valA === valB) return "tie";
     if (betterHigher) {
       return valA > valB ? "A" : "B";
@@ -226,44 +274,82 @@ export default function PlayerCompare({ players }: PlayerCompareProps) {
         <div id="compare-main-container" className="space-y-5">
           
           {/* Selectors */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#16161c] p-4 rounded border border-slate-850">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 tracking-wider uppercase mb-1.5 font-mono">Player Alpha Input</label>
-              <select
-                id="compare-select-pA"
-                value={playerAId}
-                onChange={(e) => setPlayerAId(e.target.value)}
-                className="w-full px-3 py-1.5 bg-[#0a0a0c] text-white font-mono border border-slate-800 rounded focus:border-emerald-500 text-xs outline-none"
-              >
-                {players.map((p) => (
-                  <option key={p.id} value={p.id} disabled={p.id === playerBId} className="bg-[#121216]">
-                    {p.name} ({p.state}) [{p.format}]
-                  </option>
-                ))}
-              </select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#16161c] p-4 rounded border border-slate-850">
+            {/* Player Alpha selection */}
+            <div className="space-y-2">
+              <label className="block text-[10px] font-bold text-slate-500 tracking-wider uppercase font-mono">Player Alpha Input</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {/* Name select */}
+                <div className="sm:col-span-2">
+                  <select
+                    id="compare-select-nameA"
+                    value={nameA}
+                    onChange={(e) => setNameA(e.target.value)}
+                    className="w-full px-3 py-1.5 bg-[#0a0a0c] text-white font-mono border border-slate-800 rounded focus:border-emerald-500 text-xs outline-none"
+                  >
+                    {uniquePlayers.map((u) => (
+                      <option key={u.name} value={u.name} className="bg-[#121216]">
+                        {u.name} ({u.state})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {/* Format select */}
+                <div>
+                  <select
+                    id="compare-select-formatA"
+                    value={formatA}
+                    onChange={(e) => setFormatA(e.target.value as GameFormat)}
+                    className="w-full px-3 py-1.5 bg-[#0a0a0c] text-emerald-400 font-mono border border-slate-800 rounded focus:border-emerald-500 text-xs outline-none"
+                  >
+                    <option value={GameFormat.FC} className="bg-[#121216] text-white">FC</option>
+                    <option value={GameFormat.ListA} className="bg-[#121216] text-white">List A</option>
+                    <option value={GameFormat.T20} className="bg-[#121216] text-white">T20</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 tracking-wider uppercase mb-1.5 font-mono">Player Beta Input</label>
-              <select
-                id="compare-select-pB"
-                value={playerBId}
-                onChange={(e) => setPlayerBId(e.target.value)}
-                className="w-full px-3 py-1.5 bg-[#0a0a0c] text-white font-mono border border-slate-800 rounded focus:border-emerald-500 text-xs outline-none"
-              >
-                {players.map((p) => (
-                  <option key={p.id} value={p.id} disabled={p.id === playerAId} className="bg-[#121216]">
-                    {p.name} ({p.state}) [{p.format}]
-                  </option>
-                ))}
-              </select>
+            {/* Player Beta selection */}
+            <div className="space-y-2">
+              <label className="block text-[10px] font-bold text-slate-500 tracking-wider uppercase font-mono">Player Beta Input</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {/* Name select */}
+                <div className="sm:col-span-2">
+                  <select
+                    id="compare-select-nameB"
+                    value={nameB}
+                    onChange={(e) => setNameB(e.target.value)}
+                    className="w-full px-3 py-1.5 bg-[#0a0a0c] text-white font-mono border border-slate-800 rounded focus:border-emerald-500 text-xs outline-none"
+                  >
+                    {uniquePlayers.map((u) => (
+                      <option key={u.name} value={u.name} className="bg-[#121216]">
+                        {u.name} ({u.state})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {/* Format select */}
+                <div>
+                  <select
+                    id="compare-select-formatB"
+                    value={formatB}
+                    onChange={(e) => setFormatB(e.target.value as GameFormat)}
+                    className="w-full px-3 py-1.5 bg-[#0a0a0c] text-blue-400 font-mono border border-slate-800 rounded focus:border-emerald-500 text-xs outline-none"
+                  >
+                    <option value={GameFormat.FC} className="bg-[#121216] text-white">FC</option>
+                    <option value={GameFormat.ListA} className="bg-[#121216] text-white">List A</option>
+                    <option value={GameFormat.T20} className="bg-[#121216] text-white">T20</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Cards Header Display in Dark Style */}
           <div className="grid grid-cols-2 gap-4 pt-1">
             {/* Player A Card */}
-            {playerA && (
+            {playerA ? (
               <div className="bg-[#16161c] border border-slate-800 rounded p-4 text-center relative overflow-hidden flex flex-col items-center">
                 <span className="absolute top-2 right-2 bg-emerald-950/55 text-emerald-400 border border-emerald-500/20 font-bold text-[9px] uppercase px-1.5 py-0.5 rounded font-mono">ALPHA</span>
                 
@@ -284,10 +370,31 @@ export default function PlayerCompare({ players }: PlayerCompareProps) {
                 <h4 className="text-sm font-bold text-white truncate mt-1 w-full">{playerA.name}</h4>
                 <p className="text-[9px] font-bold text-emerald-400 bg-emerald-950/20 inline-block px-2 py-0.5 rounded border border-emerald-500/20 mt-1 font-mono uppercase">{playerA.role}</p>
               </div>
+            ) : (
+              <div className="bg-[#16161c]/45 border border-slate-900 border-dashed rounded p-4 text-center relative overflow-hidden flex flex-col items-center justify-center min-h-[160px]">
+                <span className="absolute top-2 right-2 bg-slate-950 text-slate-500 border border-slate-800 font-bold text-[9px] uppercase px-1.5 py-0.5 rounded font-mono">ALPHA</span>
+                
+                <p className="text-[11px] text-slate-400 font-bold font-sans mt-3">{nameA}</p>
+                <p className="text-[9px] text-slate-500 font-mono mt-1">No {formatA} stats recorded</p>
+                {onAddMissingFormat && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const sample = players.find(p => p.name === nameA);
+                      if (sample) {
+                        onAddMissingFormat(sample.name, sample.state, sample.role, formatA);
+                      }
+                    }}
+                    className="mt-3.5 px-2.5 py-1 bg-emerald-950/60 hover:bg-emerald-900 text-[10px] font-bold font-mono text-emerald-400 border border-emerald-500/20 rounded uppercase cursor-pointer hover:border-emerald-500/40 transition-all select-none"
+                  >
+                    + Initialize {formatA === GameFormat.FC ? "FC" : formatA}
+                  </button>
+                )}
+              </div>
             )}
 
             {/* Player B Card */}
-            {playerB && (
+            {playerB ? (
               <div className="bg-[#16161c] border border-slate-800 rounded p-4 text-center relative overflow-hidden flex flex-col items-center">
                 <span className="absolute top-2 right-2 bg-blue-950/55 text-blue-400 border border-blue-500/20 font-bold text-[9px] uppercase px-1.5 py-0.5 rounded font-mono">BETA</span>
                 
@@ -308,6 +415,27 @@ export default function PlayerCompare({ players }: PlayerCompareProps) {
                 <h4 className="text-sm font-bold text-white truncate mt-1 w-full">{playerB.name}</h4>
                 <p className="text-[9px] font-bold text-blue-400 bg-blue-950/20 inline-block px-2 py-0.5 rounded border border-blue-500/10 mt-1 font-mono uppercase">{playerB.role}</p>
               </div>
+            ) : (
+              <div className="bg-[#16161c]/45 border border-slate-900 border-dashed rounded p-4 text-center relative overflow-hidden flex flex-col items-center justify-center min-h-[160px]">
+                <span className="absolute top-2 right-2 bg-slate-950 text-slate-500 border border-slate-800 font-bold text-[9px] uppercase px-1.5 py-0.5 rounded font-mono">BETA</span>
+                
+                <p className="text-[11px] text-slate-400 font-bold font-sans mt-3">{nameB}</p>
+                <p className="text-[9px] text-slate-500 font-mono mt-1">No {formatB} stats recorded</p>
+                {onAddMissingFormat && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const sample = players.find(p => p.name === nameB);
+                      if (sample) {
+                        onAddMissingFormat(sample.name, sample.state, sample.role, formatB);
+                      }
+                    }}
+                    className="mt-3.5 px-2.5 py-1 bg-[#1c1c24] hover:bg-slate-900 text-[10px] font-bold font-mono text-blue-400 border border-blue-500/20 rounded uppercase cursor-pointer hover:border-blue-500/40 transition-all select-none"
+                  >
+                    + Initialize {formatB === GameFormat.FC ? "FC" : formatB}
+                  </button>
+                )}
+              </div>
             )}
           </div>
 
@@ -322,8 +450,8 @@ export default function PlayerCompare({ players }: PlayerCompareProps) {
 
             {comparisonRows.map((row, idx) => {
               const winner = getWinner(row.valA, row.valB, row.betterHigher);
-              const formattedA = row.formatter(row.valA, playerA);
-              const formattedB = row.formatter(row.valB, playerB);
+              const formattedA = playerA ? row.formatter(row.valA, playerA) : "—";
+              const formattedB = playerB ? row.formatter(row.valB, playerB) : "—";
 
               return (
                 <div key={idx} className="grid grid-cols-12 py-3 items-center text-center text-xs hover:bg-[#16161c]/60 transition font-mono border-b border-slate-900/60">
@@ -350,11 +478,11 @@ export default function PlayerCompare({ players }: PlayerCompareProps) {
                   
                   {/* Player A score */}
                   <div className={`col-span-3 px-2 ${
-                    winner === "A" ? "text-emerald-450 font-bold text-sm" : "text-slate-505"
+                    winner === "A" && playerA ? "text-emerald-450 font-bold text-sm" : "text-slate-505"
                   }`}>
                     <div className="flex items-center justify-center gap-1.5">
                       {formattedA}
-                      {winner === "A" && <Check className="w-3.5 h-3.5 text-emerald-400 hidden sm:inline shrink-0" />}
+                      {winner === "A" && playerA && <Check className="w-3.5 h-3.5 text-emerald-400 hidden sm:inline shrink-0" />}
                     </div>
                   </div>
 
@@ -367,10 +495,10 @@ export default function PlayerCompare({ players }: PlayerCompareProps) {
 
                   {/* Player B score */}
                   <div className={`col-span-3 px-2 ${
-                    winner === "B" ? "text-emerald-450 font-bold text-sm" : "text-slate-550"
+                    winner === "B" && playerB ? "text-emerald-450 font-bold text-sm" : "text-slate-550"
                   }`}>
                     <div className="flex items-center justify-center gap-1.5">
-                      {winner === "B" && <Check className="w-3.5 h-3.5 text-emerald-400 hidden sm:inline shrink-0" />}
+                      {winner === "B" && playerB && <Check className="w-3.5 h-3.5 text-emerald-400 hidden sm:inline shrink-0" />}
                       {formattedB}
                     </div>
                   </div>
@@ -384,10 +512,14 @@ export default function PlayerCompare({ players }: PlayerCompareProps) {
             <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
             <div className="text-slate-400 leading-relaxed font-mono">
               <strong className="block font-bold mb-0.5 text-emerald-450 uppercase text-[10px]">Active Duel Verdict Matrix</strong>
-              {playerA && playerB && (
+              {playerA && playerB ? (
                 <span>
-                  <strong>{playerA.name}</strong> statistics are highlighted in <span className="text-emerald-450">green</span> when demonstrating supreme consistency/scoring speed (Batting Avg/SR) or bowling capacity.
-                  Conversely, <strong>{playerB.name}</strong> statistics are highlighted when displaying protective excellence (lower Bowling Economy/Bowling Strike Rate).
+                  <strong>{playerA.name} ({playerA.format})</strong> statistics are highlighted in <span className="text-emerald-450">green</span> when demonstrating supreme consistency/scoring speed (Batting Avg/SR) or bowling capacity.
+                  Conversely, <strong>{playerB.name} ({playerB.format})</strong> statistics are highlighted when displaying protective excellence (lower Bowling Economy/Bowling Strike Rate).
+                </span>
+              ) : (
+                <span>
+                  Select any active profiles from both inputs to process comparison telemetry. Missing formats can be quickly initialized using the respective launcher buttons.
                 </span>
               )}
             </div>
