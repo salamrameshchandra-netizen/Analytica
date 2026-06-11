@@ -1,0 +1,302 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------- */
+/* SQUAD ANALYTICA LIGHT MODE STYLING REGISTER                   */
+/* ------------------------------------------------------------- */
+
+.light {
+  background-color: #f8fafc !important; /* slate-50 */
+  color: #334155 !important;            /* slate-700 */
+}
+
+/* Master High Density Cards & Containers */
+.light .bg-\[\#121216\] {
+  background-color: #ffffff !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+}
+
+.light .bg-\[\#16161c\] {
+  background-color: #f1f5f9 !important; /* slate-100 */
+}
+
+.light .bg-\[\#0a0a0c\] {
+  background-color: #e2e8f0 !important; /* slate-200 */
+}
+
+.light .bg-\[\#09090c\] {
+  background-color: #f8fafc !important;
+}
+
+.light .bg-\[\#07070a\] {
+  background-color: #f1f5f9 !important;
+}
+
+/* Translucent & Nested Sections */
+.light .bg-\[\#121216\]\/80 {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light .bg-\[\#121216\]\/50 {
+  background-color: rgba(248, 250, 252, 0.6) !important;
+}
+
+.light .bg-\[\#16161c\]\/40 {
+  background-color: rgba(241, 245, 249, 0.4) !important;
+}
+
+.light .bg-\[\#16161c\]\/60 {
+  background-color: rgba(241, 245, 249, 0.6) !important;
+}
+
+.light .hover\:bg-\[\#16161c\]\/60:hover {
+  background-color: #e2e8f0 !important;
+}
+
+.light .bg-\[\#1b1b22\] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Global Nav bar */
+.light #high-density-navbar {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* Standard Board Dividers & Borders */
+.light .border-slate-800 {
+  border-color: #e2e8f0 !important;
+}
+
+.light .border-slate-800\/40 {
+  border-color: rgba(226, 232, 240, 0.7) !important;
+}
+
+.light .border-slate-800\/45 {
+  border-color: rgba(226, 232, 240, 0.7) !important;
+}
+
+.light .border-slate-800\/80 {
+  border-color: #e2e8f0 !important;
+}
+
+.light .border-slate-850 {
+  border-color: #e2e8f0 !important;
+}
+
+.light .border-slate-900\/60 {
+  border-color: #cbd5e1 !important;
+}
+
+.light .border-slate-800 {
+  border-color: #cbd5e1 !important;
+}
+
+/* Float Overlays, Dropdowns, and Modals */
+.light .bg-\[\#0f0f13\] {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1) !important;
+}
+
+/* Modals Backdrop Tint */
+.light .fixed.inset-0.bg-black\/80,
+.light .fixed.inset-0.bg-\[\#000\]\/80,
+.light .fixed.inset-0.bg-\[\#000\]\/75,
+.light #confirm-modal-backdrop,
+.light #csv-import-modal-backdrop,
+.light #stats-form-backdrop {
+  background-color: rgba(15, 23, 42, 0.5) !important;
+  backdrop-filter: blur(5px) !important;
+}
+
+.light #stats-form-card,
+.light #csv-import-modal-box,
+.light #confirm-modal-box {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Input Fields & Textareas & Select Dropdowns */
+.light input,
+.light select,
+.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light input:focus,
+.light select:focus,
+.light textarea:focus {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1) !important;
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.light select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.light select option:disabled {
+  color: #94a3b8 !important;
+  background-color: #f1f5f9 !important;
+}
+
+/* Brand / Standard Typography & Text colors */
+.light .text-white {
+  color: #0f172a !important; /* dark slate-900 */
+}
+
+.light .text-slate-300 {
+  color: #334155 !important; /* slate-700 */
+}
+
+.light .text-slate-350 {
+  color: #334155 !important;
+}
+
+.light .text-slate-400 {
+  color: #475569 !important; /* slate-650 */
+}
+
+.light .text-slate-500 {
+  color: #64748b !important; /* slate-500 */
+}
+
+.light .text-slate-505 {
+  color: #475569 !important;
+}
+
+.light .text-slate-350.hover\:text-white:hover {
+  color: #000000 !important;
+}
+
+/* Tabs Accent States */
+.light .bg-emerald-950\/10 {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+.light .bg-emerald-950\/25 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+
+.light .bg-emerald-950\/5 {
+  background-color: rgba(16, 185, 129, 0.04) !important;
+}
+
+.light .bg-emerald-950\/20 {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+.light .bg-indigo-950\/40 {
+  background-color: rgba(79, 70, 229, 0.08) !important;
+  border-color: rgba(79, 70, 229, 0.15) !important;
+  color: #4f46e5 !important;
+}
+
+.light .text-indigo-400 {
+  color: #4f46e5 !important;
+}
+
+.light .bg-slate-900 {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+.light .bg-slate-950 {
+  background-color: #ffffff !important;
+}
+
+/* Hover utilities for Light Mode buttons */
+.light .hover\:bg-slate-900\/50:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.light .hover\:bg-slate-850:hover {
+  background-color: #e2e8f0 !important;
+  color: #000000 !important;
+}
+
+/* Heatmap & Alerts Customization */
+.light .bg-rose-950 {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.light .text-rose-400 {
+  color: #dc2626 !important;
+}
+
+.light .bg-rose-950\/20 {
+  background-color: rgba(239, 68, 68, 0.08) !important;
+  border-color: rgba(239, 68, 68, 0.15) !important;
+}
+
+.light .hover\:bg-rose-950\/30:hover {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Ensure high contrast text colors for heatmap stats in Light Mode */
+.light .text-indigo-300,
+.light .text-indigo-400 {
+  color: #3b31c1 !important; /* Rich High-Contrast Indigo */
+}
+
+.light .text-amber-300,
+.light .text-amber-400 {
+  color: #b45309 !important; /* Dark Gold-Amber */
+}
+
+.light .text-sky-300,
+.light .text-sky-400,
+.light .text-sky-450 {
+  color: #0369a1 !important; /* Bold Ocean Sky Blue */
+}
+
+.light .text-rose-300,
+.light .text-rose-350,
+.light .text-rose-450 {
+  color: #dc2626 !important; /* High Contrast Rose */
+}
+
+.light .text-emerald-300,
+.light .text-emerald-400 {
+  color: #047857 !important; /* Distinct Emerald Green */
+}
+
+.light .text-slate-350,
+.light .text-slate-505 {
+  color: #475569 !important; /* Dark slate text */
+}
+
+/* Chart Tooltips Alignment */
+.light .recharts-default-tooltip {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #1e293b !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+}
+
+.light .recharts-tooltip-cursor {
+  stroke: #e2e8f0 !important;
+}
+
+.light .recharts-cartesian-grid-horizontal line,
+.light .recharts-cartesian-grid-vertical line {
+  stroke: #f1f5f9 !important;
+}
+
+.light .recharts-text {
+  fill: #64748b !important;
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Cricket Player Stats Analyzer",
+  "description": "An interactive application for cricket player statistics analysis, including batting averages and bowling strike rates with interactive visualizations and PDF reporting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
