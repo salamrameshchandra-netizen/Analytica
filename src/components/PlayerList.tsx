@@ -6,8 +6,9 @@ import {
   calculateBowlingEconomy,
   calculateBowlingStrikeRate
 } from "../initialData";
-import { Search, Filter, Edit, Trash2, Plus, RefreshCw, FileText, Download, Database, ChevronDown, ChevronUp, Award, Zap, Shield, Sparkles, Activity } from "lucide-react";
+import { Search, Filter, Edit, Trash2, Plus, RefreshCw, FileText, Download, Database, ChevronDown, ChevronUp, Award, Zap, Shield, Sparkles, Activity, BarChart2 } from "lucide-react";
 import { motion } from "motion/react";
+import PlayerFormatsModal from "./PlayerFormatsModal";
 
 const getPlayerArchetype = (player: PlayerStats) => {
   const avg = calculateBattingAverage(player);
@@ -84,6 +85,7 @@ interface PlayerListProps {
   onReset: () => void;
   onExportPdf: () => void;
   onImportClick: () => void;
+  onAddMissingFormat?: (name: string, state: string, role: PlayerRole, format: GameFormat) => void;
 }
 
 export default function PlayerList({
@@ -93,12 +95,14 @@ export default function PlayerList({
   onAddNew,
   onReset,
   onExportPdf,
-  onImportClick
+  onImportClick,
+  onAddMissingFormat
 }: PlayerListProps) {
   const [search, setSearch] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("All");
   const [selectedFormat, setSelectedFormat] = useState<string>("All");
   const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
+  const [comparePlayerName, setComparePlayerName] = useState<string | null>(null);
 
   const togglePlayerExpand = (playerId: string) => {
     setExpandedPlayerId((prev) => (prev === playerId ? null : playerId));
@@ -449,7 +453,30 @@ export default function PlayerList({
                           </div>
                           
                           <div>
-                            <div className="font-bold text-white text-xs tracking-tight font-sans">{player.name}</div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span 
+                                className="font-bold text-white text-xs tracking-tight font-sans cursor-pointer hover:text-emerald-400 hover:underline decoration-emerald-500/50 transition-all"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setComparePlayerName(player.name);
+                                }}
+                                title={`Click to compare ${player.name}'s stats across all formats`}
+                              >
+                                {player.name}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setComparePlayerName(player.name);
+                                }}
+                                className="inline-flex items-center gap-1 text-[8.5px] font-bold font-mono px-1.5 py-0.5 rounded bg-indigo-950/45 hover:bg-indigo-900/60 border border-indigo-500/20 text-indigo-400 hover:text-indigo-300 transition-all cursor-pointer select-none"
+                                title={`View ${player.name}'s complete stats across all game formats`}
+                              >
+                                <BarChart2 className="w-2.5 h-2.5" />
+                                Formats
+                              </button>
+                            </div>
                             <div className="flex flex-wrap items-center gap-1.5 text-slate-500 text-[10px] mt-0.5">
                               <span className="text-slate-400 font-medium">{player.state}</span>
                               <span>·</span>
@@ -851,6 +878,20 @@ export default function PlayerList({
           </span>
           <span>HIGH DENSITY REALTIME DEPLOYMENT VALIDATED</span>
         </div>
+      )}
+
+      {comparePlayerName && (
+        <PlayerFormatsModal
+          playerName={comparePlayerName}
+          allPlayers={players}
+          onClose={() => setComparePlayerName(null)}
+          onAddMissingFormat={(name, state, role, format) => {
+            if (onAddMissingFormat) {
+              onAddMissingFormat(name, state, role, format);
+            }
+            setComparePlayerName(null);
+          }}
+        />
       )}
     </div>
   );

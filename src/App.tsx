@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PlayerStats } from "./types";
+import { PlayerStats, PlayerRole, GameFormat } from "./types";
 import { initialPlayers } from "./initialData";
 import { generatePdfReport } from "./utils/pdfGenerator";
 import Visualizations from "./components/Visualizations";
@@ -511,6 +511,38 @@ export default function App() {
               onReset={handleResetToPreloaded}
               onExportPdf={handleExportPdfReport}
               onImportClick={() => setIsImportOpen(true)}
+              onAddMissingFormat={(name, state, role, format) => {
+                setEditingPlayer({
+                  id: `player-${Date.now()}`,
+                  name,
+                  state,
+                  role,
+                  format,
+                  matches: 0,
+                  battingInnings: 0,
+                  notOuts: 0,
+                  battingRuns: 0,
+                  highestScore: 0,
+                  highestScoreNotOut: false,
+                  ballsFaced: 0,
+                  battingStrikeRate: 0,
+                  hundreds: 0,
+                  fiftyPlus: 0,
+                  fours: 0,
+                  sixes: 0,
+                  bowlingInnings: 0,
+                  ballsBowled: 0,
+                  runsConceded: 0,
+                  wickets: 0,
+                  bestBowlingWickets: 0,
+                  bestBowlingRuns: 0,
+                  bowlingEconomy: 0,
+                  bowlingStrikeRate: 0,
+                  catches: 0,
+                  stumpings: 0,
+                });
+                setIsFormOpen(true);
+              }}
             />
           )}
 
