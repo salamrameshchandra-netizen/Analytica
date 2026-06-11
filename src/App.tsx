@@ -7,7 +7,10 @@ import PlayerCompare from "./components/PlayerCompare";
 import PlayerList from "./components/PlayerList";
 import StatsForm from "./components/StatsForm";
 import CsvImporter from "./components/CsvImporter";
-import { Trophy, Activity, Users, Swords, Award, AlertCircle, RefreshCw, Clock, ArrowUpRight, ArrowDownRight, Camera, Sun, Moon } from "lucide-react";
+import CloudSyncHub from "./components/CloudSyncHub";
+import { auth, db } from "./firebase";
+import { writeBatch, collection, doc, getDocs } from "firebase/firestore";
+import { Trophy, Activity, Users, Swords, Award, AlertCircle, RefreshCw, Clock, ArrowUpRight, ArrowDownRight, Camera, Sun, Moon, Cloud } from "lucide-react";
 
 interface HistoricalSnapshot {
   playersCount: number;
@@ -19,6 +22,16 @@ interface HistoricalSnapshot {
 
 export default function App() {
   const [players, setPlayers] = useState<PlayerStats[]>([]);
+  const [isCloudOpen, setIsCloudOpen] = useState(false);
+  const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem("cricket_squad_autosync");
+    return saved === "true";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("cricket_squad_autosync", String(isAutoSyncEnabled));
+  }, [isAutoSyncEnabled]);
+
   const [editingPlayer, setEditingPlayer] = useState<PlayerStats | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -149,6 +162,24 @@ export default function App() {
   const savePlayers = (updatedPlayers: PlayerStats[]) => {
     setPlayers(updatedPlayers);
     localStorage.setItem("cricket_squad_players", JSON.stringify(updatedPlayers));
+
+    // Auto sync to cloud if enabled and authenticated
+    if (isAutoSyncEnabled && auth.currentUser) {
+      const userPlayersPath = `users/${auth.currentUser.uid}/players`;
+      const batch = writeBatch(db);
+      
+      getDocs(collection(db, userPlayersPath)).then((snap) => {
+        snap.forEach((docSnap) => {
+          batch.delete(doc(db, userPlayersPath, docSnap.id));
+        });
+        updatedPlayers.forEach((player) => {
+          batch.set(doc(db, userPlayersPath, player.id), player);
+        });
+        return batch.commit();
+      }).catch((err) => {
+        console.error("Auto sync failed:", err);
+      });
+    }
   };
 
   const handleCreateOrUpdatePlayer = (player: PlayerStats) => {
@@ -279,6 +310,13 @@ export default function App() {
                 <span className="hidden sm:inline">Dark Theme</span>
               </>
             )}
+          </button>
+          <button 
+            onClick={() => setIsCloudOpen(true)}
+            className="px-3 py-1.5 text-xs bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 hover:border-emerald-500/40 rounded hover:bg-[#16161c] hover:text-white transition-all flex items-center gap-1.5 font-mono"
+            title="Upload, synchronize, or share your squad in the cloud database"
+          >
+            <Cloud className="w-3.5 h-3.5 text-emerald-400" /> Cloud Sync
           </button>
           <button 
             onClick={handleCaptureSnapshot}
@@ -529,6 +567,16 @@ export default function App() {
           existingPlayers={players}
         />
       )}
+
+      {/* Cloud Synchronizer Hub */}
+      <CloudSyncHub
+        isOpen={isCloudOpen}
+        onClose={() => setIsCloudOpen(false)}
+        localPlayers={players}
+        onImportPlayers={handleBulkImport}
+        isAutoSyncEnabled={isAutoSyncEnabled}
+        setIsAutoSyncEnabled={setIsAutoSyncEnabled}
+      />
 
       {/* Custom Confirmation Modal */}
       {confirmDialog && (

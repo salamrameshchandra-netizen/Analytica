@@ -1,0 +1,83 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile metadata",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid"]
+    },
+    "Player": {
+      "title": "Player",
+      "description": "Cricket player statistics and details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "state": { "type": "string" },
+        "role": { "type": "string" },
+        "format": { "type": "string" },
+        "matches": { "type": "integer" },
+        "battingInnings": { "type": "integer" },
+        "notOuts": { "type": "integer" },
+        "battingRuns": { "type": "integer" },
+        "highestScore": { "type": "integer" },
+        "highestScoreNotOut": { "type": "boolean" },
+        "ballsFaced": { "type": "integer" },
+        "battingStrikeRate": { "type": "number" },
+        "hundreds": { "type": "integer" },
+        "fiftyPlus": { "type": "integer" },
+        "fours": { "type": "integer" },
+        "sixes": { "type": "integer" },
+        "bowlingInnings": { "type": "integer" },
+        "ballsBowled": { "type": "integer" },
+        "runsConceded": { "type": "integer" },
+        "wickets": { "type": "integer" },
+        "bestBowlingWickets": { "type": "integer" },
+        "bestBowlingRuns": { "type": "integer" },
+        "bowlingEconomy": { "type": "number" },
+        "bowlingStrikeRate": { "type": "number" },
+        "catches": { "type": "integer" },
+        "stumpings": { "type": "integer" },
+        "avatarEmoji": { "type": "string" },
+        "avatarColor": { "type": "string" }
+      },
+      "required": ["id", "name", "role", "format"]
+    },
+    "SharedSquad": {
+      "title": "SharedSquad",
+      "description": "Metadata for a companion shared squad available via public code",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "ownerEmail": { "type": "string" },
+        "playerCount": { "type": "integer" }
+      },
+      "required": ["code", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of user metadata"
+    },
+    "/users/{userId}/players/{playerId}": {
+      "schema": "Player",
+      "description": "Subcollection of players in a user's cloud squad"
+    },
+    "/shared_squads/{squadId}": {
+      "schema": "SharedSquad",
+      "description": "Collection of shared squads"
+    },
+    "/shared_squads/{squadId}/players/{playerId}": {
+      "schema": "Player",
+      "description": "Subcollection of players inside a shared squad"
+    }
+  }
+}
