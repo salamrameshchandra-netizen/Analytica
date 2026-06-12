@@ -92,7 +92,13 @@ export default function CloudSyncHub({
       setSuccessMessage("Authenticated successfully!");
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
-      setErrorMessage("Authentication failed. Please check internet connection.");
+      console.error("Sign in failed:", err);
+      const errStr = String(err);
+      if (errStr.includes("popup-blocked") || (err instanceof Error && err.message.includes("popup")) || errStr.toLowerCase().includes("cancelled-by-user") || errStr.toLowerCase().includes("canceled-by-user")) {
+        setErrorMessage("Sign-in popup was blocked or closed. Please allow popups in your browser or open the application in a new tab using the URL at the top.");
+      } else {
+        setErrorMessage(`Authentication failed: ${err instanceof Error ? err.message : errStr}. (Tip: If inside the sandboxed iframe, open the app in a new tab to authenticate successfully)`);
+      }
     }
   };
 
@@ -153,10 +159,19 @@ export default function CloudSyncHub({
       setSuccessMessage(`Backed up ${localPlayers.length} players to your personal cloud folder!`);
       setTimeout(() => setSuccessMessage(null), 4000);
     } catch (err) {
+      console.error("Personal cloud backup failed:", err);
       try {
         handleFirestoreError(err, OperationType.WRITE, userPlayersPath);
       } catch (wrappedError) {
-        setErrorMessage(wrappedError instanceof Error ? wrappedError.message : "Failed to sync to the cloud.");
+        const errMsg = wrappedError instanceof Error ? wrappedError.message : String(wrappedError);
+        let cleanedMsg = errMsg;
+        try {
+          const parsed = JSON.parse(errMsg);
+          if (parsed && parsed.error) {
+            cleanedMsg = parsed.error;
+          }
+        } catch (_) {}
+        setErrorMessage(`Backup failed: ${cleanedMsg}. Check connection and security rules.`);
       }
     } finally {
       setCloudActionLoading(null);
@@ -187,10 +202,19 @@ export default function CloudSyncHub({
         setTimeout(() => setSuccessMessage(null), 4000);
       }
     } catch (err) {
+      console.error("Personal cloud retrieve failed:", err);
       try {
         handleFirestoreError(err, OperationType.GET, userPlayersPath);
       } catch (wrappedError) {
-        setErrorMessage("Retrieval failed due to database permission restrictions.");
+        const errMsg = wrappedError instanceof Error ? wrappedError.message : String(wrappedError);
+        let cleanedMsg = errMsg;
+        try {
+          const parsed = JSON.parse(errMsg);
+          if (parsed && parsed.error) {
+            cleanedMsg = parsed.error;
+          }
+        } catch (_) {}
+        setErrorMessage(`Retrieval failed: ${cleanedMsg}. Check database permission restrictions and rules.`);
       }
     } finally {
       setCloudActionLoading(null);
@@ -232,10 +256,19 @@ export default function CloudSyncHub({
       setGeneratedShareCode(code);
       setSuccessMessage("Players uploaded successfully! Share the code with others to collaborate.");
     } catch (err) {
+      console.error("Publish shared squad failed:", err);
       try {
         handleFirestoreError(err, OperationType.WRITE, docPath);
       } catch (wrappedError) {
-        setErrorMessage("Upload to shared database failed. Please verify configurations.");
+        const errMsg = wrappedError instanceof Error ? wrappedError.message : String(wrappedError);
+        let cleanedMsg = errMsg;
+        try {
+          const parsed = JSON.parse(errMsg);
+          if (parsed && parsed.error) {
+            cleanedMsg = parsed.error;
+          }
+        } catch (_) {}
+        setErrorMessage(`Upload to shared database failed: ${cleanedMsg}. Please verify your Firebase Firestore configuration and ensure security rules are deployed successfully.`);
       }
     } finally {
       setCloudActionLoading(null);
