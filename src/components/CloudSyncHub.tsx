@@ -15,7 +15,8 @@ import {
   signInWithGoogle, 
   logoutUser, 
   OperationType, 
-  handleFirestoreError 
+  handleFirestoreError,
+  firebaseConfig
 } from "../firebase";
 import { PlayerStats } from "../types";
 import { 
@@ -162,7 +163,7 @@ export default function CloudSyncHub({
         setErrorMessage("Sign-in popup was blocked or closed. Please allow popups in your browser or open the application in a new tab using the URL at the top.");
       } else if (errStr.includes("unauthorized-domain") || errStr.includes("auth/unauthorized-domain")) {
         const hostname = window.location.hostname;
-        const projectId = "restful-gantry-gr5vm";
+        const projectId = firebaseConfig?.projectId || "restful-gantry-gr5vm";
         setErrorMessage(<DomainErrorHelper hostname={hostname} projectId={projectId} />);
       } else {
         setErrorMessage(`Authentication failed: ${err instanceof Error ? err.message : errStr}. (Tip: If inside the sandboxed iframe, open the app in a new tab to authenticate successfully)`);
