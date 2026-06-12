@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   collection, 
   doc, 
@@ -70,7 +70,7 @@ export default function CloudSyncHub({
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   // General connection message/error
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<React.ReactNode | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Monitor auth state changes
@@ -96,6 +96,25 @@ export default function CloudSyncHub({
       const errStr = String(err);
       if (errStr.includes("popup-blocked") || (err instanceof Error && err.message.includes("popup")) || errStr.toLowerCase().includes("cancelled-by-user") || errStr.toLowerCase().includes("canceled-by-user")) {
         setErrorMessage("Sign-in popup was blocked or closed. Please allow popups in your browser or open the application in a new tab using the URL at the top.");
+      } else if (errStr.includes("unauthorized-domain") || errStr.includes("auth/unauthorized-domain")) {
+        const hostname = window.location.hostname;
+        const projectId = "restful-gantry-gr5vm";
+        setErrorMessage(
+          <div className="space-y-2">
+            <div>
+              <span className="font-bold text-rose-450 text-[11px] block">Firebase Auth Domain Restriction</span>
+              The domain <code className="px-1 py-0.5 bg-rose-950/40 rounded border border-rose-800 text-[10.5px] font-mono text-rose-300">{hostname}</code> is not authorized for Google Sign-in in this Firebase project.
+            </div>
+            <div className="text-[10px] text-rose-300/80 leading-normal pl-2 border-l border-rose-500/20 font-sans mt-2">
+              <span className="font-bold uppercase text-[9px] text-rose-455 block mb-0.5">How to resolve:</span>
+              1. Open your <a href={`https://console.firebase.google.com/project/${projectId}/authentication/providers`} target="_blank" rel="noopener noreferrer" className="text-emerald-400 font-bold hover:underline">Firebase Console → Auth → Settings → Authorized domains</a>.
+              <br />
+              2. Click <span className="font-bold text-white">"Add domain"</span> and input <code className="px-1 bg-slate-900 rounded border border-slate-850 font-mono text-white text-[9.5px]">{hostname}</code>.
+              <br />
+              3. Save, wait 20 seconds, and refresh this page to sign in successfully!
+            </div>
+          </div>
+        );
       } else {
         setErrorMessage(`Authentication failed: ${err instanceof Error ? err.message : errStr}. (Tip: If inside the sandboxed iframe, open the app in a new tab to authenticate successfully)`);
       }
