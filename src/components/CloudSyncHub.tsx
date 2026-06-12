@@ -111,6 +111,8 @@ interface CloudSyncHubProps {
   onImportPlayers: (players: PlayerStats[], mode: "merge" | "overwrite") => void;
   isAutoSyncEnabled: boolean;
   setIsAutoSyncEnabled: (val: boolean) => void;
+  isCloudSyncVisible: boolean;
+  setIsCloudSyncVisible: (val: boolean) => void;
 }
 
 export default function CloudSyncHub({
@@ -119,7 +121,9 @@ export default function CloudSyncHub({
   localPlayers,
   onImportPlayers,
   isAutoSyncEnabled,
-  setIsAutoSyncEnabled
+  setIsAutoSyncEnabled,
+  isCloudSyncVisible,
+  setIsCloudSyncVisible
 }: CloudSyncHubProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -428,16 +432,163 @@ export default function CloudSyncHub({
         {/* Main tabs/sections */}
         <div className="p-6 space-y-6">
           
-          {/* Section A: Google Login & Cloud Persistence Folders */}
-          <div className="border border-slate-850 p-4 rounded-lg bg-slate-900/30 space-y-4">
+          {/* Option 1: Instant Auth-Free Backups & Shared Squads (Best for Vercel / Custom Domains) */}
+          <div className="border border-slate-850 p-5 rounded-lg bg-[#141419]/60 space-y-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] bg-emerald-500 text-black px-1.5 py-0.5 rounded font-bold uppercase font-mono tracking-wide">Highly Compatible</span>
+                <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase font-mono tracking-wide">Vercel Safe</span>
+              </div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5 mt-2">
+                <Share2 className="w-4 h-4 text-emerald-400 animate-pulse" />
+                Auth-Free Squad Backup & Dynamic Share Codes
+              </h4>
+              <p className="text-[10px] text-slate-400 font-sans mt-1 leading-relaxed">
+                Generate an anonymous backup/share code to instantly secure your squad data in the cloud database, or load an existing code. <strong>Requires no logins or Google account authorization</strong>, making it 100% functional on Vercel and custom domains!
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+              {/* Box 1: Generate Share Code / Backup */}
+              <div className="border border-slate-800 p-3.5 rounded-md bg-slate-900/40 space-y-3.5 flex flex-col justify-between">
+                <div>
+                  <span className="text-[9.5px] font-bold text-slate-350 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                    Create Backup Code
+                  </span>
+                  <p className="text-[9.5px] text-slate-500 font-sans mt-0.5">
+                    Save your current {localPlayers.length} players to a secure private cloud code.
+                  </p>
+                </div>
+
+                {generatedShareCode ? (
+                  <div className="p-3 bg-slate-950 border border-emerald-500/30 rounded flex items-center justify-between font-mono text-xs">
+                    <div className="space-y-1">
+                      <span className="text-[8px] text-slate-500 block uppercase font-mono">My Backup/Share Code</span>
+                      <span className="text-emerald-400 font-bold tracking-widest text-sm">{generatedShareCode}</span>
+                    </div>
+                    <button 
+                      onClick={copyToClipboard}
+                      className="p-1 px-2.5 bg-slate-900 border border-slate-850 hover:bg-slate-800 hover:border-slate-700 rounded text-[10px] text-slate-300 font-mono transition-all flex items-center gap-1"
+                    >
+                      {copiedShareCode ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-400" /> Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3 text-slate-500" /> Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handlePublishSharedSquad}
+                    disabled={cloudActionLoading !== null || localPlayers.length === 0}
+                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-black text-[10.5px] font-bold rounded flex items-center justify-center gap-1.5 uppercase transition-all tracking-wide disabled:pointer-events-none mt-2 font-mono"
+                  >
+                    <CloudUpload className="w-3.5 h-3.5" />
+                    {cloudActionLoading === "share" ? "Securing backup..." : "Generate Backup Code"}
+                  </button>
+                )}
+              </div>
+
+              {/* Box 2: Fetch and Import shared squad */}
+              <div className="border border-slate-850 p-3.5 rounded-md bg-slate-900/40 space-y-3.5">
+                <div>
+                  <span className="text-[9.5px] font-bold text-slate-350 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                    Restore From Backup Code
+                  </span>
+                  <p className="text-[9.5px] text-slate-500 font-sans mt-0.5">
+                    Input a backup/share code below to fetch and overwrite your current active screen roster.
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="e.g. SQR-P3J9A"
+                    value={inputShareCode}
+                    onChange={(e) => setInputShareCode(e.target.value)}
+                    className="px-2.5 py-1.5 bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-650 rounded focus:border-amber-500 outline-none w-full uppercase font-mono"
+                  />
+                  <button
+                    onClick={handleFetchSharedSquad}
+                    disabled={cloudActionLoading === "fetch" || !inputShareCode.trim()}
+                    className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 font-extrabold text-xs text-white rounded transition-all uppercase tracking-wide shrink-0 font-mono disabled:opacity-40"
+                  >
+                    {cloudActionLoading === "fetch" ? (
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                    ) : (
+                      "Load"
+                    )}
+                  </button>
+                </div>
+
+                {fetchError && (
+                  <p className="text-[9.5px] text-rose-400 font-mono leading-tight bg-rose-950/15 p-2 rounded border border-rose-500/10">
+                    {fetchError}
+                  </p>
+                )}
+
+                {fetchedPlayers && (
+                  <div className="p-3 bg-slate-950 border border-slate-850 rounded space-y-2.5">
+                    <div className="flex justify-between items-center text-[10px] border-b border-slate-900 pb-1.5">
+                      <span className="text-slate-400 font-mono">Found Squad Roster</span>
+                      <span className="text-emerald-400 font-mono font-bold">{fetchedPlayers.length} Players</span>
+                    </div>
+                    
+                    {/* Quick preview scroll */}
+                    <div className="max-h-20 overflow-y-auto space-y-1 pr-1 font-mono text-[9.5px]">
+                      {fetchedPlayers.map((p, idx) => (
+                        <div key={p.id || idx} className="flex justify-between items-center text-slate-450">
+                          <span className="truncate max-w-[130px] font-bold text-slate-300">{p.name}</span>
+                          <span>{p.state} · {p.role}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        onClick={() => {
+                          onImportPlayers(fetchedPlayers, "merge");
+                          setFetchedPlayers(null);
+                          setInputShareCode("");
+                          onClose();
+                        }}
+                        className="w-full py-1.5 bg-[#16161c] hover:bg-slate-900 border border-slate-800 rounded text-[10px] font-extrabold text-emerald-400 font-mono uppercase tracking-wider transition-all"
+                      >
+                        Merge In
+                      </button>
+                      <button
+                        onClick={() => {
+                          onImportPlayers(fetchedPlayers, "overwrite");
+                          setFetchedPlayers(null);
+                          setInputShareCode("");
+                          onClose();
+                        }}
+                        className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-black rounded text-[10px] font-extrabold font-mono uppercase tracking-wider transition-all"
+                      >
+                        Overwrite
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Option 2: Google Sign-In & Personal Backup (Auth-Restricted) */}
+          <div className="border border-slate-850 p-4 rounded-lg bg-slate-900/20 space-y-4">
             <div className="flex justify-between items-start">
               <div>
                 <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
                   <Shield className="w-3.5 h-3.5 text-indigo-400" />
-                  Personal Secure Backup
+                  Personal Google Cloud Folder
                 </h4>
                 <p className="text-[10px] text-slate-500 font-sans mt-1">
-                  Authenticate with Google to back up your roster in a unique personal cloud folder.
+                  Authenticate with Google to back up your roster in a private, encrypted cloud folder.
                 </p>
               </div>
 
@@ -451,7 +602,7 @@ export default function CloudSyncHub({
                   </div>
                   <button 
                     onClick={handleSignOut}
-                    className="p-1 text-slate-500 hover:text-rose-400 font-mono text-[9px] uppercase border border-slate-800 bg-[#16161c] rounded hover:border-rose-900 transition-all flex items-center gap-1"
+                    className="p-1 px-1.5 text-slate-500 hover:text-rose-400 font-mono text-[9px] uppercase border border-slate-800 bg-[#16161c] rounded hover:border-rose-900 transition-all flex items-center gap-1"
                     title="Sign Out"
                   >
                     <LogOut className="w-2.5 h-2.5" /> Log Out
@@ -467,12 +618,19 @@ export default function CloudSyncHub({
               )}
             </div>
 
+            {!currentUser && (
+              <div className="p-2.5 bg-indigo-950/20 border border-indigo-900/20 rounded text-[9.5px] text-slate-400 leading-normal">
+                <span className="font-bold text-amber-500 font-mono text-[9px] uppercase tracking-wider block mb-0.5">⚠️ Domain authorization limit</span>
+                Note: Google Sign-in only works on domains authorized in the Firebase console (like the development environment). Because Firebase is managed server-side by AI Studio, <strong>it is prevented from logging in on your custom Vercel domain</strong>. Please use the Vercel-Safe Option 1 above to backup/restore securely!
+              </div>
+            )}
+
             {currentUser && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 <button
                   onClick={handleUploadToPersonalCloud}
                   disabled={cloudActionLoading !== null}
-                  className="p-3 bg-slate-900 border border-slate-800 rounded-md hover:border-slate-700 hover:bg-slate-850 text-left transition-all relative overflow-hidden group disabled:opacity-40"
+                  className="p-3 bg-slate-900/60 border border-slate-800 rounded hover:border-slate-700 hover:bg-slate-850 text-left transition-all relative overflow-hidden group disabled:opacity-40"
                 >
                   <div className="flex items-center gap-2 text-xs font-bold text-white font-mono">
                     <CloudUpload className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
@@ -486,7 +644,7 @@ export default function CloudSyncHub({
                 <button
                   onClick={handleDownloadFromPersonalCloud}
                   disabled={cloudActionLoading !== null}
-                  className="p-3 bg-slate-900 border border-slate-800 rounded-md hover:border-slate-700 hover:bg-slate-850 text-left transition-all relative overflow-hidden group disabled:opacity-40"
+                  className="p-3 bg-slate-900/60 border border-slate-800 rounded hover:border-slate-700 hover:bg-slate-850 text-left transition-all relative overflow-hidden group disabled:opacity-40"
                 >
                   <div className="flex items-center gap-2 text-xs font-bold text-white font-mono">
                     <CloudDownload className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
@@ -498,141 +656,6 @@ export default function CloudSyncHub({
                 </button>
               </div>
             )}
-          </div>
-
-          {/* Section B: Instant Sharing Codes */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            {/* Box 1: Generate Share Code */}
-            <div className="border border-slate-850 p-4 rounded-lg bg-slate-900/30 space-y-4 flex flex-col justify-between">
-              <div>
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
-                  <Share2 className="w-3.5 h-3.5 text-emerald-400" />
-                  Publish Shared Squad
-                </h4>
-                <p className="text-[10px] text-slate-500 font-sans mt-1 leading-relaxed">
-                  Generate an anonymous share code so anyone can instantly view or duplicate this cohort squad.
-                </p>
-              </div>
-
-              {generatedShareCode ? (
-                <div className="p-3 bg-slate-950 border border-emerald-500/30 rounded-lg flex items-center justify-between font-mono text-xs">
-                  <div className="space-y-1">
-                    <span className="text-[8px] text-slate-500 block uppercase font-mono">Code generated</span>
-                    <span className="text-emerald-400 font-bold tracking-widest text-sm">{generatedShareCode}</span>
-                  </div>
-                  <button 
-                    onClick={copyToClipboard}
-                    className="p-1 px-2.5 bg-slate-900 border border-slate-850 hover:bg-slate-800 hover:border-slate-700 rounded text-[10px] text-slate-300 font-mono transition-all flex items-center gap-1"
-                  >
-                    {copiedShareCode ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-400" /> Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3 text-slate-505" /> Copy Code
-                      </>
-                    )}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handlePublishSharedSquad}
-                  disabled={cloudActionLoading !== null || localPlayers.length === 0}
-                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-black text-xs font-bold rounded flex items-center justify-center gap-1.5 uppercase transition-all tracking-wide disabled:pointer-events-none mt-2 font-mono"
-                >
-                  <CloudUpload className="w-3.5 h-3.5" />
-                  {cloudActionLoading === "share" ? "Uploading Records..." : "Generate Share Code"}
-                </button>
-              )}
-            </div>
-
-            {/* Box 2: Fetch and Import shared squad */}
-            <div className="border border-slate-850 p-4 rounded-lg bg-slate-900/30 space-y-4">
-              <div>
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
-                  <Key className="w-3.5 h-3.5 text-amber-400" />
-                  Load Cloud Share Code
-                </h4>
-                <p className="text-[10px] text-slate-500 font-sans mt-1">
-                  Input a shared squad code below to import players to your active workspace.
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="e.g. SQR-P3J9A"
-                  value={inputShareCode}
-                  onChange={(e) => setInputShareCode(e.target.value)}
-                  className="px-2.5 py-1.5 bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-650 rounded focus:border-amber-500 outline-none w-full uppercase font-mono"
-                />
-                <button
-                  onClick={handleFetchSharedSquad}
-                  disabled={cloudActionLoading === "fetch" || !inputShareCode.trim()}
-                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 font-bold text-xs text-white rounded transition-all uppercase tracking-wide shrink-0 font-mono disabled:opacity-40"
-                >
-                  {cloudActionLoading === "fetch" ? (
-                    <RefreshCw className="w-3 h-3 animate-spin" />
-                  ) : (
-                    "Load"
-                  )}
-                </button>
-              </div>
-
-              {fetchError && (
-                <p className="text-[10px] text-rose-450 font-mono leading-tight bg-rose-950/15 p-2 rounded border border-rose-500/10">
-                  {fetchError}
-                </p>
-              )}
-
-              {fetchedPlayers && (
-                <div className="p-3 bg-slate-950 border border-slate-850 rounded space-y-2.5">
-                  <div className="flex justify-between items-center text-[10px] border-b border-slate-900 pb-1.5">
-                    <span className="text-slate-400 font-mono">Found Squad Roster</span>
-                    <span className="text-emerald-400 font-mono font-bold">{fetchedPlayers.length} Players</span>
-                  </div>
-                  
-                  {/* Quick preview scroll */}
-                  <div className="max-h-20 overflow-y-auto space-y-1 pr-1 font-mono text-[9.5px]">
-                    {fetchedPlayers.map((p, idx) => (
-                      <div key={p.id || idx} className="flex justify-between items-center text-slate-450">
-                        <span className="truncate max-w-[130px] font-bold text-slate-300">{p.name}</span>
-                        <span>{p.state} · {p.role}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-2 pt-1">
-                    <button
-                      onClick={() => {
-                        onImportPlayers(fetchedPlayers, "merge");
-                        setFetchedPlayers(null);
-                        setInputShareCode("");
-                        onClose();
-                      }}
-                      className="w-full py-1.5 bg-[#16161c] hover:bg-slate-900 border border-slate-800 rounded text-[10px] font-extrabold text-emerald-400 font-mono uppercase tracking-wider transition-all"
-                    >
-                      Merge In
-                    </button>
-                    <button
-                      onClick={() => {
-                        onImportPlayers(fetchedPlayers, "overwrite");
-                        setFetchedPlayers(null);
-                        setInputShareCode("");
-                        onClose();
-                      }}
-                      className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-black rounded text-[10px] font-extrabold font-mono uppercase tracking-wider transition-all"
-                    >
-                      Overwrite
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
           </div>
 
           {/* Section C: Optional Cloud Auto-Sync */}
@@ -658,6 +681,28 @@ export default function CloudSyncHub({
               </label>
             </div>
           )}
+
+          {/* Section D: View Preference (Hide/Remove Cloud Sync button from Navigation) */}
+          <div className="flex items-center justify-between p-3.5 bg-rose-950/5 border border-rose-950/25 rounded-lg flex-row">
+            <div className="flex gap-2.5 items-start max-w-sm sm:max-w-md">
+              <AlertCircle className="w-4.5 h-4.5 text-rose-400 shrink-0 mt-0.5 animate-pulse" />
+              <div>
+                <h4 className="text-[11px] font-bold text-white uppercase font-mono">Remove Sync From main bar (Disable)</h4>
+                <p className="text-[9.5px] text-slate-500 font-sans mt-0.5 leading-relaxed">
+                  Toggle this to completely hide the prominent emerald "Cloud Sync" layout button from the top navigation. (You can re-enable it at any time).
+                </p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                checked={!isCloudSyncVisible}
+                onChange={(e) => setIsCloudSyncVisible(!e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-500 peer-checked:after:bg-black peer-checked:after:border-black"></div>
+            </label>
+          </div>
 
         </div>
 
