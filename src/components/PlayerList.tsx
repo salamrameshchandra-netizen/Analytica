@@ -36,6 +36,21 @@ const getPlayerArchetype = (player: PlayerStats) => {
   return "Squad Representative";
 };
 
+const getRoleBadgeClasses = (role: PlayerRole) => {
+  switch (role) {
+    case PlayerRole.Batsman:
+      return "text-amber-400 bg-amber-955/20 border-amber-500/20";
+    case PlayerRole.Bowler:
+      return "text-sky-450 bg-sky-955/20 border-sky-550/20";
+    case PlayerRole.AllRounder:
+      return "text-fuchsia-400 bg-fuchsia-955/20 border-fuchsia-500/20";
+    case PlayerRole.WicketKeeper:
+      return "text-teal-400 bg-teal-955/20 border-teal-500/20";
+    default:
+      return "text-slate-400 bg-slate-900 border-slate-800";
+  }
+};
+
 const TrendIndicator = ({ 
   value, 
   average, 
@@ -480,7 +495,9 @@ export default function PlayerList({
                             <div className="flex flex-wrap items-center gap-1.5 text-slate-500 text-[10px] mt-0.5">
                               <span className="text-slate-400 font-medium">{player.state}</span>
                               <span>·</span>
-                              <span className="text-emerald-400 uppercase font-semibold text-[9px] px-1 bg-emerald-950/20 rounded border border-emerald-500/10">{player.role}</span>
+                              <span className={`uppercase font-semibold text-[9px] px-1.5 py-0.5 rounded border ${getRoleBadgeClasses(player.role)}`}>
+                                {player.role}
+                              </span>
                               <span>·</span>
                               <span className="text-sky-400 uppercase font-bold text-[9px] px-1 bg-sky-950/20 rounded border border-sky-500/10">{player.format || "FC"}</span>
                             </div>

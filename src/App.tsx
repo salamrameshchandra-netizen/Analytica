@@ -110,10 +110,11 @@ export default function App() {
       const initialSR = Number((players.reduce((sum, p) => sum + p.battingStrikeRate, 0) / players.length).toFixed(1));
       const initialRuns = players.reduce((sum, p) => sum + p.battingRuns, 0);
       const initialWickets = players.reduce((sum, p) => sum + p.wickets, 0);
+      const uniqueCount = new Set(players.map((p) => p.name.trim().toLowerCase())).size;
 
       // Seed a historical benchmark so both green/red trends are instantly visible upon initial load
       const newSnapshot: HistoricalSnapshot = {
-        playersCount: Math.max(1, players.length - 1),
+        playersCount: Math.max(1, uniqueCount - 1),
         averageSquadSR: Number((initialSR - 1.5).toFixed(1)),
         totalSquadRuns: initialRuns - 1340,
         totalSquadWickets: initialWickets + 8, // Slightly higher to showcase a decline (red arrow)
@@ -130,9 +131,10 @@ export default function App() {
       : 0;
     const currentRuns = players.reduce((sum, p) => sum + p.battingRuns, 0);
     const currentWickets = players.reduce((sum, p) => sum + p.wickets, 0);
+    const uniqueCount = new Set(players.map((p) => p.name.trim().toLowerCase())).size;
 
     const newSnapshot: HistoricalSnapshot = {
-      playersCount: players.length,
+      playersCount: uniqueCount,
       averageSquadSR: currentSR,
       totalSquadRuns: currentRuns,
       totalSquadWickets: currentWickets,
@@ -316,6 +318,7 @@ export default function App() {
   const averageSquadSR = players.length > 0 
     ? Number((players.reduce((sum, p) => sum + p.battingStrikeRate, 0) / players.length).toFixed(1))
     : 0;
+  const uniquePlayersCount = new Set(players.map((p) => p.name.trim().toLowerCase())).size;
 
   return (
     <div className={`min-h-screen bg-[#0a0a0c] font-sans text-slate-350 antialiased selection:bg-emerald-950 selection:text-emerald-250 pb-16 transition-colors duration-150 ${
@@ -401,8 +404,8 @@ export default function App() {
               <span className="text-[9px] text-slate-600 group-hover:text-emerald-400 transition-colors">ⓘ</span>
             </span>
             <div className="flex items-center mt-1">
-              <div className="text-2xl font-mono font-bold text-white">{players.length}</div>
-              {snapshot && renderKpiTrend(players.length, snapshot.playersCount, "number")}
+              <div className="text-2xl font-mono font-bold text-white">{uniquePlayersCount}</div>
+              {snapshot && renderKpiTrend(uniquePlayersCount, snapshot.playersCount, "number")}
             </div>
             
             {snapshot && (
