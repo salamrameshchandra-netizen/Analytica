@@ -39,6 +39,70 @@ import {
   AlertCircle
 } from "lucide-react";
 
+function DomainErrorHelper({ hostname, projectId }: { hostname: string; projectId: string }) {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(hostname);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="space-y-2 text-left w-full">
+      <div>
+        <span className="font-bold text-rose-400 text-[11px] block uppercase tracking-wider mb-1 font-mono">Firebase Auth Domain Restriction</span>
+        The domain <code className="px-1 py-0.5 bg-rose-950/45 rounded border border-rose-800 text-[10.5px] font-mono text-rose-300 font-bold">{hostname}</code> is not authorized for Google Sign-in in this Firebase project.
+      </div>
+      
+      {/* Interactive copy block */}
+      <div className="flex items-center gap-2 mt-2">
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 px-3 py-1 bg-rose-950/60 hover:bg-rose-900/80 border border-rose-500/20 hover:border-rose-500/40 rounded text-[10px] text-rose-200 transition-all font-mono font-bold focus:outline-none cursor-pointer shadow-sm select-none"
+        >
+          {copied ? (
+            <>
+              <Check className="w-3 h-3 text-emerald-450 shrink-0" />
+              <span>Copied to Clipboard!</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3 h-3 text-rose-300 shrink-0" />
+              <span>Copy Domain String</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      <div className="text-[10px] text-slate-400 leading-normal pl-2.5 border-l-2 border-rose-500/25 font-sans mt-3 space-y-1">
+        <span className="font-bold uppercase text-[9px] text-rose-400 block mb-1">Interactive Recovery Steps:</span>
+        <div>
+          1. Open the {" "}
+          <a 
+            href={`https://console.firebase.google.com/project/${projectId}/authentication/providers`} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-emerald-400 font-bold hover:underline inline-flex items-center gap-0.5"
+          >
+            Firebase Console settings page
+          </a>.
+        </div>
+        <div>
+          2. Under the <span className="font-medium text-white">"Authorized domains"</span> section, click <span className="font-bold text-white">"Add domain"</span>.
+        </div>
+        <div>
+          3. Paste the copied domain <code className="px-1 bg-slate-900 rounded border border-slate-800 font-mono text-white text-[9.5px]">{hostname}</code> and click <span className="font-bold text-white">Save</span>.
+        </div>
+        <div className="text-[9px] text-slate-500 font-mono pt-1">
+          * Usually updates instantly, though please allow up to 20 seconds.
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface CloudSyncHubProps {
   isOpen: boolean;
   onClose: () => void;
@@ -99,22 +163,7 @@ export default function CloudSyncHub({
       } else if (errStr.includes("unauthorized-domain") || errStr.includes("auth/unauthorized-domain")) {
         const hostname = window.location.hostname;
         const projectId = "restful-gantry-gr5vm";
-        setErrorMessage(
-          <div className="space-y-2">
-            <div>
-              <span className="font-bold text-rose-450 text-[11px] block">Firebase Auth Domain Restriction</span>
-              The domain <code className="px-1 py-0.5 bg-rose-950/40 rounded border border-rose-800 text-[10.5px] font-mono text-rose-300">{hostname}</code> is not authorized for Google Sign-in in this Firebase project.
-            </div>
-            <div className="text-[10px] text-rose-300/80 leading-normal pl-2 border-l border-rose-500/20 font-sans mt-2">
-              <span className="font-bold uppercase text-[9px] text-rose-455 block mb-0.5">How to resolve:</span>
-              1. Open your <a href={`https://console.firebase.google.com/project/${projectId}/authentication/providers`} target="_blank" rel="noopener noreferrer" className="text-emerald-400 font-bold hover:underline">Firebase Console → Auth → Settings → Authorized domains</a>.
-              <br />
-              2. Click <span className="font-bold text-white">"Add domain"</span> and input <code className="px-1 bg-slate-900 rounded border border-slate-850 font-mono text-white text-[9.5px]">{hostname}</code>.
-              <br />
-              3. Save, wait 20 seconds, and refresh this page to sign in successfully!
-            </div>
-          </div>
-        );
+        setErrorMessage(<DomainErrorHelper hostname={hostname} projectId={projectId} />);
       } else {
         setErrorMessage(`Authentication failed: ${err instanceof Error ? err.message : errStr}. (Tip: If inside the sandboxed iframe, open the app in a new tab to authenticate successfully)`);
       }
